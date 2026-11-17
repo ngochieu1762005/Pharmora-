@@ -137,4 +137,21 @@ class ApiTests(unittest.TestCase):
         self.assertIn('data-mobile-page="sales"',html)
         self.assertIn('viewport-fit=cover',html)
 
+    def test_07_design_system_assets(self):
+        client = Client(self.base)
+        for path in ('/design.css','/design.js'):
+            status, payload = client.req(path)
+            self.assertEqual(status, 200)
+            self.assertGreater(len(payload), 500)
+        for path in ('/','/login','/register','/app'):
+            status, payload = client.req(path)
+            self.assertEqual(status, 200)
+            html = payload.decode('utf-8')
+            self.assertIn('href="/design.css"', html)
+            self.assertIn('src="/design.js"', html)
+        status, payload = client.req('/app')
+        html = payload.decode('utf-8')
+        self.assertIn('id="headerQuickSearch"', html)
+        self.assertIn('id="headerQuickSale"', html)
+
 if __name__=='__main__':unittest.main()

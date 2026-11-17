@@ -206,3 +206,29 @@ Get-Service PharmoraBackend,CaddyWeb
 ```
 
 Giữ `CaddyWeb` đang chạy; không mở thêm `python server.py` hoặc `caddy.exe run` song song với dịch vụ NSSM. Kiểm tra bằng điện thoại qua HTTPS sau khi cập nhật. Chỉ sử dụng dữ liệu thử nghiệm, không dùng hồ sơ bệnh nhân thật.
+
+
+## Thiết kế giao diện 3.0 — Desktop và Mobile
+
+Bộ giao diện mới sử dụng **hệ thống thiết kế thống nhất** cho website giới thiệu, đăng ký/đăng nhập và toàn bộ không gian quản lý nhà thuốc. Bản nâng cấp chỉ tác động **HTML/CSS/JavaScript phía trình duyệt**, không thay đổi bảng SQLite, API, cơ chế đăng nhập hoặc quyền quản trị.
+
+- **Desktop:** sidebar dễ quan sát hơn, header có tìm kiếm nhanh `Ctrl+K` và thao tác tạo đơn bán; KPI, biểu đồ, danh sách thuốc, bảng dữ liệu và form dùng cùng ngôn ngữ màu sắc, khoảng cách và trạng thái.
+- **Mobile/tablet:** bố cục được tinh chỉnh riêng tại 900px/640px, thanh điều hướng phía dưới và menu mở rộng, bảng dữ liệu dạng thẻ, popup nhập liệu có vùng an toàn cho điện thoại.
+- **Landing page:** cải thiện phân cấp thông tin, minh họa dashboard, thẻ giải pháp, FAQ và CTA.
+- **Authentication:** nâng cấp trang đăng nhập/đăng ký, cỡ chữ, vùng bấm, khả năng nhận biết focus và thông báo lỗi.
+- **Khả năng sử dụng:** hỗ trợ giảm chuyển động khi người dùng bật Reduce Motion, cải thiện focus bàn phím; ô tìm kiếm nhanh hỗ trợ bàn phím hoặc cảm ứng.
+- **Không thêm package hoặc CDN JavaScript**; chỉ sử dụng font chữ Google hiện có.
+
+Tệp triển khai: `static/design.css`, `static/design.js`, các trang HTML và các route static mới trong `server.py`.
+
+Để deploy lên VPS đang chạy NSSM services, chạy PowerShell theo đúng thứ tự và chỉ khởi động lại backend sau khi script cập nhật kiểm thử thành công:
+
+```powershell
+Stop-Service PharmoraBackend
+Invoke-WebRequest "https://raw.githubusercontent.com/ngochieu1762005/Pharmora-/main/deploy.ps1" -OutFile "C:\web\deploy.ps1"
+& "C:\web\deploy.ps1"
+Start-Service PharmoraBackend
+Get-Service PharmoraBackend,CaddyWeb
+```
+
+Không dừng `CaddyWeb` khi chỉ thay mã nguồn ứng dụng. Sau deploy, kiểm tra từ điện thoại và desktop; **chưa thể xác nhận hiển thị trên mọi thiết bị thực nếu chưa kiểm thử trực tiếp bằng trình duyệt**. Dự án vẫn là bản thử nghiệm kỹ thuật, không đưa dữ liệu bệnh nhân thật vào.
