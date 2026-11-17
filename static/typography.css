@@ -1,11 +1,9 @@
-/*
- * PharmaVision Typography & Iconography 1.0
- * Unicode-safe Vietnamese-first text scale.
- * Be Vietnam Pro has native Vietnamese glyphs and proper stacked diacritics.
- * Fallback fonts remain available if Google Fonts is unreachable.
+/* PharmaVision Typography & Iconography 1.1
+ * Reliable Vietnamese rendering via native system fonts.
+ * No remote font files, no faux variable-font weights.
  */
 :root{
-  --pv-font:'Be Vietnam Pro',-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Arial,sans-serif;
+  --pv-font:Arial,'Segoe UI',Roboto,'Noto Sans',sans-serif;
   --pv-font-size:14px;
 }
 html {font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -27,26 +25,49 @@ body {
 h1,h2,h3,h4,h5,h6{
   line-height:1.3;
   font-weight:700;
-  letter-spacing:-.028em;
+  letter-spacing:-.014em;
 }
-h1{line-height:1.19;letter-spacing:-.036em}
+h1{line-height:1.19;letter-spacing:-.02em}
 h2{line-height:1.28}
 p,small,button,label{line-height:1.6}
 strong,b{font-weight:700}
 button,input,textarea,select{font-size:inherit}
 input,select,textarea{line-height:1.55}
-.ws-table th,.ws-label,.section-kicker,.auth-label,.section-number,
+.ws-table th,.ws-label,.auth-label,.section-number,
 .ws-pharmacy small,.feature-card small,.band-label,.solution-number{
-  letter-spacing:.035em;
+  letter-spacing:.015em;
 }
-.ws-sidebar .logo,.logo{letter-spacing:-.045em}
+/* Vietnamese diacritics remain visually attached to their letters. */
+.section-kicker,.section-kicker.light {
+  font-family:var(--pv-font)!important;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:0!important;
+  line-height:1.65;
+  font-variant:normal;
+  font-feature-settings:normal;
+  text-transform:none;
+}
+.section-heading .section-kicker {margin-bottom:3px;}
+.hero-copy h1,.section-heading h2,.workflow-layout h2,.faq-layout h2,
+.auth-brand-main h1,.security-layout h2,.final-cta h2 {
+  font-family:var(--pv-font)!important;
+  font-weight:700;
+  text-rendering:optimizeLegibility;
+}
+.section-heading h2,.workflow-layout h2,.faq-layout h2 {
+  letter-spacing:-.012em!important;
+  line-height:1.28!important;
+}
+
+.ws-sidebar .logo,.logo{letter-spacing:-.02em}
 .hero-copy h1,.auth-brand-main h1,.final-cta h2{
-  letter-spacing:-.035em;
+  letter-spacing:-.02em;
   line-height:1.19;
 }
 .section-heading h2,.workflow-layout h2,.faq-layout h2,
-.security-layout h2{letter-spacing:-.032em;line-height:1.25}
-.ws-page-title h1{letter-spacing:-.024em;line-height:1.3}
+.security-layout h2{letter-spacing:-.015em;line-height:1.25}
+.ws-page-title h1{letter-spacing:-.01em;line-height:1.3}
 .ws-stat strong{letter-spacing:-.024em;line-height:1.28}
 .ws-alert-row b,.ws-batch b,.sale-product b{letter-spacing:-.01em;line-height:1.55}
 .site-header .desktop-nav{font-size:13px}

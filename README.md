@@ -252,3 +252,13 @@ Icon sử dụng SVG `currentColor`, viewBox 24×24, stroke bo tròn đồng nh�
 4. Kiểm tra font tải chậm hoặc không có mạng đến Google Fonts: fallback của hệ điều hành vẫn hiển thị được tiếng Việt.
 
 **Triển khai:** GitHub chỉ cập nhật mã nguồn, không tự deploy đến VPS. Sau khi push, trong PowerShell trên VPS chạy `Stop-Service PharmoraBackend`, tải `deploy.ps1` từ GitHub, chạy script, rồi `Start-Service PharmoraBackend` khi script báo thành công. Không dừng `CaddyWeb` và không chạy `server.py` thủ công trùng cổng.
+
+
+### Khắc phục lỗi chữ tiếng Việt trên toàn trang (font hệ thống)
+
+Bản cập nhật tiếp theo **ngừng tải Google Fonts** và chuyển sang `Arial, Segoe UI, Roboto, Noto Sans, sans-serif` để giảm nguy cơ lỗi font, mất dấu hoặc tải web font không đủ glyph tiếng Việt. Font được sử dụng thống nhất cho trang chủ, tài khoản và workspace; không yêu cầu Internet để tải font riêng. Điều chỉnh `font-weight` về 600/700 cho nhãn và tiêu đề chính, bỏ giãn chữ quá lớn ở `02 / NĂNG LỰC NỀN TẢNG` và các nhãn tương tự, hạn chế chữ tiếng Việt bị rời dấu trên trình duyệt Windows và điện thoại. Icon SVG vẫn được giữ nguyên.
+
+Tệp thay đổi: `static/typography.css`, `static/styles.css`, `static/index.html`, `static/login.html`, `static/register.html`, `static/workspace.html`. Sau khi deploy cần **tải lại trang bằng Ctrl+Shift+R** hoặc mở tab ẩn danh. Chưa xác minh trên tất cả thiết bị thật.
+
+
+**Font hiện hành:** Bộ font hệ thống Arial / Segoe UI / Roboto / Noto Sans đã thay cho Be Vietnam Pro. Các hướng dẫn mô tả Be Vietnam Pro ở các mục lịch sử trước đây không còn áp dụng; xem mục Khắc phục lỗi chữ tiếng Việt bên trên.

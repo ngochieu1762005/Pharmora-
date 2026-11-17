@@ -161,7 +161,7 @@ class ApiTests(unittest.TestCase):
             self.assertEqual(status, 200)
             self.assertGreater(len(payload), 500)
         status, sheet = client.req('/typography.css')
-        self.assertIn(b'Be Vietnam Pro', sheet)
+        self.assertIn(b'--pv-font:Arial', sheet)
         status, icons = client.req('/icons.js')
         self.assertIn(b'createElementNS', icons)
         for path in ('/','/login','/register','/app'):
@@ -169,8 +169,24 @@ class ApiTests(unittest.TestCase):
             self.assertEqual(status, 200)
             html = response.decode('utf-8')
             self.assertIn('charset="UTF-8"', html.lower().replace('charset="utf-8"','charset="UTF-8"'))
-            self.assertIn('Be+Vietnam+Pro', html)
+            self.assertNotIn('fonts.googleapis.com', html)
             self.assertIn('href="/typography.css"', html)
             self.assertIn('src="/icons.js"', html)
+
+    def test_09_system_font_without_google_dependency(self):
+        client = Client(self.base)
+        for path in ('/','/login','/register','/app'):
+            status, response = client.req(path)
+            self.assertEqual(status, 200)
+            html = response.decode('utf-8')
+            self.assertNotIn('fonts.googleapis.com', html)
+            self.assertNotIn('fonts.gstatic.com', html)
+            self.assertIn('href="/typography.css"', html)
+        status, response = client.req('/typography.css')
+        self.assertEqual(status, 200)
+        css = response.decode('utf-8')
+        self.assertIn("--pv-font:Arial", css)
+        self.assertIn(".section-kicker,.section-kicker.light", css)
+        self.assertNotIn("'Be Vietnam Pro'", css)
 
 if __name__=='__main__':unittest.main()
