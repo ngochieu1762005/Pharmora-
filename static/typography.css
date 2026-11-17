@@ -1,0 +1,179 @@
+/*
+ * PharmaVision Typography & Iconography 1.0
+ * Unicode-safe Vietnamese-first text scale.
+ * Be Vietnam Pro has native Vietnamese glyphs and proper stacked diacritics.
+ * Fallback fonts remain available if Google Fonts is unreachable.
+ */
+:root{
+  --pv-font:'Be Vietnam Pro',-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Arial,sans-serif;
+  --pv-font-size:14px;
+}
+html {font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body,
+h1,h2,h3,h4,h5,h6,
+button,input,select,textarea,label,summary,
+.logo,.btn,.ws-btn,.ws-small-button,
+.ws-table,.ws-modal,.ws-sidebar,.ws-header,.ws-content,
+.auth-form-wrap,.mobile-bottom-nav{
+  font-family:var(--pv-font)!important;
+}
+body {
+  font-size:var(--pv-font-size);
+  line-height:1.64;
+  font-kerning:normal;
+  font-feature-settings:'kern' 1;
+  overflow-wrap:break-word;
+}
+h1,h2,h3,h4,h5,h6{
+  line-height:1.3;
+  font-weight:700;
+  letter-spacing:-.028em;
+}
+h1{line-height:1.19;letter-spacing:-.036em}
+h2{line-height:1.28}
+p,small,button,label{line-height:1.6}
+strong,b{font-weight:700}
+button,input,textarea,select{font-size:inherit}
+input,select,textarea{line-height:1.55}
+.ws-table th,.ws-label,.section-kicker,.auth-label,.section-number,
+.ws-pharmacy small,.feature-card small,.band-label,.solution-number{
+  letter-spacing:.035em;
+}
+.ws-sidebar .logo,.logo{letter-spacing:-.045em}
+.hero-copy h1,.auth-brand-main h1,.final-cta h2{
+  letter-spacing:-.035em;
+  line-height:1.19;
+}
+.section-heading h2,.workflow-layout h2,.faq-layout h2,
+.security-layout h2{letter-spacing:-.032em;line-height:1.25}
+.ws-page-title h1{letter-spacing:-.024em;line-height:1.3}
+.ws-stat strong{letter-spacing:-.024em;line-height:1.28}
+.ws-alert-row b,.ws-batch b,.sale-product b{letter-spacing:-.01em;line-height:1.55}
+.site-header .desktop-nav{font-size:13px}
+.preview-top,.preview-list,.ws-count-info{line-height:1.55}
+.feature-card p,.solution-card>p,.faq-list p{font-size:13px;line-height:1.85}
+.ws-nav button{font-size:13px;line-height:1.5}
+.ws-pharmacy b{font-size:13px}
+.ws-user-name b{font-size:12px}
+.ws-page-title p{font-size:13px}
+.ws-stat small{font-size:11px}
+.ws-stat .stat-caption{font-size:11px}
+.ws-table th{font-size:11px}
+.ws-table td{font-size:13px}
+.ws-input,.ws-select,.ws-textarea{font-size:13px}
+.ws-card-top select{font-size:13px}
+.ws-btn,.ws-small-button{font-size:12px;line-height:1.55}
+.ws-alert-row b{font-size:12px}
+.ws-alert-row small{font-size:11px}
+.ws-modal label,.auth-form-wrap label:not(.check-label){font-size:13px;line-height:1.5}
+.ws-modal p{font-size:12px}
+.ws-modal .ws-input,.ws-modal .ws-select,.ws-modal .ws-textarea{font-size:14px}
+.ws-overview-intro p,.ws-banner{font-size:12px}
+.ws-notification{font-size:13px}
+.ws-batch{font-size:12px}
+.ws-batch small{font-size:11px}
+.cart-line,.cart-line small{font-size:12px}
+.sale-product small{font-size:12px}
+.auth-intro{font-size:13px}
+.auth-form-wrap input:not([type=checkbox]){font-size:14px}
+.auth-bottom-text{font-size:13px}
+.auth-footer-note{font-size:11px}
+.check-label{font-size:12px}
+.mobile-nav a{font-size:14px}
+
+/* Crisp vector icon language, never dependent on a platform's glyph font */
+.pv-icon{
+  display:block;
+  width:1.3em;
+  height:1.3em;
+  flex:0 0 auto;
+  stroke:currentColor;
+  stroke-width:1.9;
+  fill:none;
+  vertical-align:middle;
+}
+.logo-icon .pv-icon {width:23px;height:23px;stroke-width:2.3}
+.ws-pharmacy .ph-ic .pv-icon{width:20px;height:20px}
+.ws-nav .nav-ic{
+  display:inline-grid;
+  place-items:center;
+  flex:0 0 23px;
+  width:23px;
+  color:#628c77;
+}
+.ws-nav .nav-ic .pv-icon{width:20px;height:20px;stroke-width:1.85}
+.ws-nav button.active .nav-ic{color:#0d7957}
+.ws-stat .stat-symbol .pv-icon{width:20px;height:20px}
+.ws-alert-row .alert-symbol .pv-icon{width:19px;height:19px}
+.feature-card .feature-ic .pv-icon{width:23px;height:23px}
+.float-icon .pv-icon{width:19px;height:19px}
+.security-icon-large .pv-icon{width:43%;height:43%;stroke-width:1.2}
+.band-items i{display:inline-flex;align-items:center;justify-content:center}
+.band-items i .pv-icon{width:20px;height:20px;stroke-width:1.75}
+.solution-number>span .pv-icon{width:17px;height:17px}
+.timeline-row>span .pv-icon{width:16px;height:16px}
+.register-benefits span .pv-icon{width:15px;height:15px}
+.ws-overview-intro .hello-icon .pv-icon{width:60px;height:60px}
+.trust-avatars .pv-icon{width:17px;height:17px}
+.security-points span{display:inline-flex;align-items:center;gap:10px;line-height:1.6}
+.security-points .pv-icon{width:17px;height:17px;color:#a9ee8f}
+.ws-btn,.ws-small-button,.btn{align-items:center}
+.ws-btn>.pv-icon,.ws-small-button>.pv-icon{width:17px;height:17px;stroke-width:2}
+.ws-btn .pv-icon + *, .ws-small-button .pv-icon + *{margin-left:0}
+.btn .pv-icon{width:18px;height:18px}
+.btn span:last-child .pv-icon{width:18px;height:18px}
+.play-circle .pv-icon{height:12px;width:12px}
+.ws-header-button .pv-icon{width:18px;height:18px}
+.sidebar-bottom .small-link{display:inline-flex;align-items:center;gap:8px}
+.sidebar-bottom .small-link .pv-icon{width:16px;height:16px}
+.ws-notification .pv-icon{height:17px;width:17px}
+.ws-action-row .pv-icon{display:inline-block}
+.feature-ic,.nav-ic,.stat-symbol,.float-icon,.ph-ic{line-height:1}
+
+/* Accessibility for accents and small-screen readability */
+@media(max-width:900px){
+  :root{--pv-font-size:14px}
+  .ws-nav button{font-size:14px}
+  .ws-page-title h1{line-height:1.31}
+  .ws-page-title p{font-size:13px;line-height:1.7}
+  .ws-sidebar .ws-label{font-size:10px;letter-spacing:.04em}
+  .ws-stat small,.ws-stat .stat-caption{font-size:11px;line-height:1.5}
+  .ws-section-title{font-size:15px}
+  .ws-input,.ws-select,.ws-textarea,
+  .ws-modal input,.ws-modal select,.ws-modal textarea,
+  .auth-form-wrap input:not([type=checkbox]){font-size:16px!important}
+  .ws-modal p,.ws-banner,.ws-count-info{font-size:12px}
+  .ws-modal label{font-size:13px}
+  .ws-btn,.ws-small-button{font-size:13px;min-height:44px}
+  .mobile-bottom-nav button{font-size:11px;line-height:1.32}
+  .mobile-bottom-nav .bottom-icon{font-size:20px}
+  .mobile-bottom-nav .bottom-icon svg{width:22px;height:22px}
+  .hero-lead{font-size:14px;line-height:1.8}
+  .hero-trust small{font-size:11px}
+}
+@media(max-width:640px){
+  :root{--pv-font-size:14px}
+  .ws-header .crumb{font-size:11px}
+  .ws-card-top .ws-count-info{font-size:11px}
+  .ws-stat strong{font-size:clamp(20px,6vw,26px)}
+  .ws-stat small,.ws-stat .stat-caption{font-size:11px}
+  .ws-table tbody tr td{font-size:13px;line-height:1.6}
+  .ws-table tbody tr td::before{font-size:11px;letter-spacing:0}
+  .ws-page-title h1{font-size:23px}
+  .ws-page-title p{font-size:13px}
+  .ws-modal .modal-actions .ws-btn{font-size:13px}
+  .ws-alert-row b{font-size:12px}
+  .ws-alert-row small{font-size:11px}
+  .sale-product b{font-size:14px}
+  .sale-product small{font-size:12px}
+  .cart-line b{font-size:13px}
+  .auth-brand-main h1{font-size:26px;line-height:1.28}
+  .auth-form-wrap h2{font-size:26px;line-height:1.3}
+  .auth-label{font-size:11px}
+  .check-label{font-size:13px}
+  .feature-card p,.solution-card>p,.faq-list p{font-size:13px}
+  .preview-logo,.preview-top,.preview-metrics small{line-height:1.45}
+}
+@media(prefers-reduced-motion:reduce){
+  .pv-icon{transition:none!important}
+}

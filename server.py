@@ -37,7 +37,8 @@ EMAIL_RE = re.compile(r'^[^\s@]{1,64}@[^\s@]{1,200}\.[^\s@]{2,}$')
 ALLOWED_STATIC = {'/': 'index.html', '/index.html': 'index.html', '/login': 'login.html', '/register': 'register.html', '/app': 'workspace.html',
                   '/styles.css': 'styles.css', '/site.js': 'site.js', '/workspace.js': 'workspace.js',
                   '/mobile.css': 'mobile.css', '/mobile.js': 'mobile.js',
-                  '/design.css': 'design.css', '/design.js': 'design.js'}
+                  '/design.css': 'design.css', '/design.js': 'design.js',
+                  '/typography.css': 'typography.css', '/icons.js': 'icons.js'}
 
 
 @contextmanager

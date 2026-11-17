@@ -154,4 +154,23 @@ class ApiTests(unittest.TestCase):
         self.assertIn('id="headerQuickSearch"', html)
         self.assertIn('id="headerQuickSale"', html)
 
+    def test_08_vietnamese_font_and_svg_icons(self):
+        client = Client(self.base)
+        for path in ('/typography.css','/icons.js'):
+            status, payload = client.req(path)
+            self.assertEqual(status, 200)
+            self.assertGreater(len(payload), 500)
+        status, sheet = client.req('/typography.css')
+        self.assertIn(b'Be Vietnam Pro', sheet)
+        status, icons = client.req('/icons.js')
+        self.assertIn(b'createElementNS', icons)
+        for path in ('/','/login','/register','/app'):
+            status, response = client.req(path)
+            self.assertEqual(status, 200)
+            html = response.decode('utf-8')
+            self.assertIn('charset="UTF-8"', html.lower().replace('charset="utf-8"','charset="UTF-8"'))
+            self.assertIn('Be+Vietnam+Pro', html)
+            self.assertIn('href="/typography.css"', html)
+            self.assertIn('src="/icons.js"', html)
+
 if __name__=='__main__':unittest.main()

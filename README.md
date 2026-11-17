@@ -232,3 +232,23 @@ Get-Service PharmoraBackend,CaddyWeb
 ```
 
 Không dừng `CaddyWeb` khi chỉ thay mã nguồn ứng dụng. Sau deploy, kiểm tra từ điện thoại và desktop; **chưa thể xác nhận hiển thị trên mọi thiết bị thực nếu chưa kiểm thử trực tiếp bằng trình duyệt**. Dự án vẫn là bản thử nghiệm kỹ thuật, không đưa dữ liệu bệnh nhân thật vào.
+
+
+## Typography & iconography — Be Vietnam Pro + SVG
+
+PharmaVision dùng **Be Vietnam Pro** cho toàn bộ trang chủ, đăng nhập/đăng ký, sidebar, dashboard, bảng kho, giỏ hàng, popup và trình bày trên điện thoại. Font có bộ glyph tiếng Việt, giúp hiển thị đúng dấu tiếng Việt (ví dụ **“Tiếng Việt: Đường, Trường, Dược sĩ, Ngưỡng, Quản lý, Viễn, Hướng dẫn, Cộng đồng, Ổn định, Ứng dụng”**). Bộ font được nạp qua Google Fonts ở các trọng lượng 400/500/600/700/800, có `display=swap` và fallback `Segoe UI`, `Noto Sans`, Arial, sans-serif khi mạng chặn Google Fonts. File HTML giữ UTF-8.
+
+Icon sử dụng SVG `currentColor`, viewBox 24×24, stroke bo tròn đồng nhất, không sử dụng icon font hoặc emoji hệ thống làm icon điều hướng. Các ký hiệu văn bản cũ trong sidebar, KPI, cảnh báo, biểu tượng tác vụ, landing page được thay thế khi tải trang, kể cả nội dung workspace được render động. Hệ thống vẫn giữ được chức năng khi script bổ trợ không tải.
+
+- `static/typography.css`: font, cỡ chữ, khoảng dòng, icon CSS cho desktop/tablet/mobile.
+- `static/icons.js`: bộ icon SVG, không gọi CDN script, không cần Node.js.
+- `THIRD_PARTY_NOTICES.md`: thông tin nguồn gốc và giấy phép font / hệ icon.
+
+### Checklist xem trên thiết bị thực
+
+1. Kiểm tra trang chủ, đăng nhập, đăng ký, kho, bán thuốc, dự báo, khách hàng, tài khoản.
+2. Kiểm tra chữ tiếng Việt đậm và thường: **“Tiếng Việt – Đường – Trường – Dược sĩ – Chữ ữ, ự, ễ, ỗ, ẳ, ộ”** trên Windows, Android Chrome và iPhone Safari.
+3. Kiểm tra icon trong sidebar, các nút thêm thuốc, chuyển trang, báo động và bảng; không còn các ô vuông thay thế cho icon.
+4. Kiểm tra font tải chậm hoặc không có mạng đến Google Fonts: fallback của hệ điều hành vẫn hiển thị được tiếng Việt.
+
+**Triển khai:** GitHub chỉ cập nhật mã nguồn, không tự deploy đến VPS. Sau khi push, trong PowerShell trên VPS chạy `Stop-Service PharmoraBackend`, tải `deploy.ps1` từ GitHub, chạy script, rồi `Start-Service PharmoraBackend` khi script báo thành công. Không dừng `CaddyWeb` và không chạy `server.py` thủ công trùng cổng.
