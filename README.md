@@ -179,3 +179,30 @@ $env:PHARMAVISION_SECURE_COOKIE="1"
 - Kiểm thử thủ công khuyến nghị tại 360px, 390px, 768px, iOS Safari và Android Chrome. **Chưa thể xác nhận mọi thiết bị thực tế đều hết lỗi** chỉ từ kiểm tra mã nguồn.
 
 > **Cảnh báo:** Đây vẫn là Local MVP chưa được đánh giá bảo mật để dùng với dữ liệu nhà thuốc/bệnh nhân thật. Không coi HTTPS là bằng chứng ứng dụng đã đủ an toàn cho production.
+
+
+## Thiết kế Mobile 2.0
+
+Giao diện mới dành riêng cho điện thoại và tablet (rộng không quá 900px), trong khi desktop giữ nguyên:
+
+- Trang giới thiệu: header và menu điều hướng dễ chạm; hero, thẻ giải pháp, dashboard minh họa bố trí một cột cho điện thoại.
+- Đăng nhập/đăng ký: biểu mẫu rõ ràng, ô nhập 16px tránh Safari iPhone tự zoom, vùng chạm lớn.
+- Workspace: thanh điều hướng 5 mục cố định phía dưới (Tổng quan / Kho / Bán thuốc / Trợ lý / Khác), có menu đầy đủ kiểu drawer và nút đóng.
+- Bảng: hiển thị dạng thẻ hai cột trên điện thoại, có nhãn từng trường; modal dạng bottom sheet, có hỗ trợ safe area.
+- Các thay đổi giữ nguyên API, dữ liệu và cơ chế đăng nhập bằng tài khoản; không cần cài thư viện mới.
+
+Các file liên quan: `static/mobile.css`, `static/mobile.js`, `static/workspace.html`. Nên kiểm thử với viewport 320, 360, 390, 430 và 768px, trên Chrome Android và Safari iOS. Các chỉnh sửa chưa đồng nghĩa đã được kiểm thử trên mọi điện thoại thực tế.
+
+### Cập nhật trên VPS Windows đang chạy services
+
+Sau khi push GitHub, SSH vào VPS và trong PowerShell chạy:
+
+```powershell
+Stop-Service PharmoraBackend
+Invoke-WebRequest "https://raw.githubusercontent.com/ngochieu1762005/Pharmora-/main/deploy.ps1" -OutFile C:\web\deploy.ps1
+& C:\web\deploy.ps1
+Start-Service PharmoraBackend
+Get-Service PharmoraBackend,CaddyWeb
+```
+
+Giữ `CaddyWeb` đang chạy; không mở thêm `python server.py` hoặc `caddy.exe run` song song với dịch vụ NSSM. Kiểm tra bằng điện thoại qua HTTPS sau khi cập nhật. Chỉ sử dụng dữ liệu thử nghiệm, không dùng hồ sơ bệnh nhân thật.

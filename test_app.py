@@ -124,4 +124,17 @@ class ApiTests(unittest.TestCase):
             self.assertEqual(status,200)
             self.assertGreater(len(blob),50)
 
+    def test_06_mobile_assets_and_navigation(self):
+        c=Client(self.base)
+        for path in ('/mobile.css','/mobile.js'):
+            status,blob=c.req(path)
+            self.assertEqual(status,200)
+            self.assertGreater(len(blob),200)
+        status,html=c.req('/app')
+        self.assertEqual(status,200)
+        html=html.decode('utf-8')
+        self.assertIn('id="mobileBottomNav"',html)
+        self.assertIn('data-mobile-page="sales"',html)
+        self.assertIn('viewport-fit=cover',html)
+
 if __name__=='__main__':unittest.main()
