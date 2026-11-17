@@ -119,7 +119,7 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(a.req('/api/sales',{'items':[{'product_id':pid,'qty':1}],'pharmacist_verified':True,'rx_verified':True,'prescription_code':'P-1'},'POST')[0],201)
     def test_05_static(self):
         c=Client(self.base)
-        for path in ('/','/login','/register','/app','/workspace.js','/styles.css'):
+        for path in ('/','/login','/register','/app','/workspace.js','/styles.css','/mobile.css','/mobile.js'):
             status,blob=c.req(path)
             self.assertEqual(status,200)
             self.assertGreater(len(blob),50)

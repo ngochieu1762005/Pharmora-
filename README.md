@@ -142,3 +142,40 @@ Những văn bản dưới đây là **tài liệu tham chiếu và yêu cầu c
 Bản này là **thiết kế lại thành đa nhà thuốc**, không ghi đè trực tiếp schema SQLite/JSON phiên bản Pharmora cũ. Giao diện cũ được lưu trong `legacy/` để tham khảo. Nếu có dữ liệu thực cần chuyển, phải viết và kiểm thử quy trình migration riêng; **không** copy file `pharmora.sqlite3` vào project mới.
 
 **Không triển khai công khai trên Internet hoặc dùng để điều hành nhà thuốc thật khi chưa qua đánh giá kỹ thuật, an toàn thông tin, quy trình dược và pháp lý.**
+
+
+## Triển khai trên VPS Windows, HTTPS và cập nhật từ GitHub
+
+Tài liệu chi tiết với các lệnh **SSH, cài Python, tải ZIP khi chưa có Git, Cloudflare DNS, Caddy, HTTPS, kiểm tra lỗi 502/522 và cập nhật**: **[Hướng dẫn triển khai Windows Server](docs/DEPLOY_WINDOWS.md)**.
+
+**Truy cập demo:** https://pharmavision.hieuds.com (phụ thuộc trạng thái VPS và Cloudflare; URL không đồng nghĩa dịch vụ luôn sẵn sàng).
+
+### Cập nhật sau khi push lên GitHub (VPS không cài Git)
+
+Trước khi cập nhật, **dừng Python trong terminal đang chạy bằng Ctrl+C**; không dừng Caddy. Dữ liệu SQLite phải được sao lưu và không được ghi đè bằng ZIP GitHub.
+
+```powershell
+# Trên máy cá nhân:
+ssh Administrator@103.77.172.235
+# Nếu SSH mở CMD, gõ: powershell
+
+# Trên VPS, trong PowerShell:
+Invoke-WebRequest "https://raw.githubusercontent.com/ngochieu1762005/Pharmora-/main/deploy.ps1" -OutFile "C:\\web\\deploy.ps1"
+& "C:\\web\\deploy.ps1"
+
+# Khi kiểm thử và cập nhật thành công, khởi động lại Python:
+cd C:\\web\\pharmora
+$env:PHARMAVISION_SECURE_COOKIE="1"
+& "C:\\Program Files\\Python313\\python.exe" server.py
+```
+
+**Caddy không cần khởi động lại khi chỉ đổi code Python/HTML/CSS/JS.** Khi sửa Caddyfile, dùng `C:\\caddy\\caddy.exe validate --config C:\\caddy\\Caddyfile` và `C:\\caddy\\caddy.exe reload --config C:\\caddy\\Caddyfile`. Bản demo đang chạy thủ công từ SSH chưa tự khởi động 24/7.
+
+### Giao diện điện thoại
+
+- `static/mobile.css`: tinh chỉnh bố cục landing, xác thực, workspace, bảng thẻ, modal, các nút cảm ứng và chiều rộng màn hình nhỏ mà không thay giao diện desktop.
+- `static/mobile.js`: bổ sung đóng menu bằng Escape/chạm bên ngoài; ngăn cuộn nền khi mở drawer/modal; gắn nhãn cột cho bảng được dựng động.
+- Màn bán thuốc không còn dựng lại toàn bộ trang mỗi lần gõ tìm kiếm, giảm tình trạng mất focus/bàn phím; duy trì lựa chọn khách hàng và xác nhận khi cập nhật giỏ hàng.
+- Kiểm thử thủ công khuyến nghị tại 360px, 390px, 768px, iOS Safari và Android Chrome. **Chưa thể xác nhận mọi thiết bị thực tế đều hết lỗi** chỉ từ kiểm tra mã nguồn.
+
+> **Cảnh báo:** Đây vẫn là Local MVP chưa được đánh giá bảo mật để dùng với dữ liệu nhà thuốc/bệnh nhân thật. Không coi HTTPS là bằng chứng ứng dụng đã đủ an toàn cho production.
