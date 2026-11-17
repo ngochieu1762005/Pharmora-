@@ -1,0 +1,175 @@
+/* PharmaVision 3.1 — stable, single-bundle finishing layer.
+   Purpose: predictable readable text, data density, accessibility, desktop/mobile parity.
+   The only served stylesheet is app.css, built from source layers by tools/build_assets.py. */
+:root{
+  --pv-primary:#12694f;
+  --pv-forest:#103b2d;
+  --pv-border:#e1eae3;
+  --pv-background:#f5f8f5;
+  --pv-text:#19352b;
+  --pv-muted:#657e70;
+  --pv-ring:rgba(22,132,94,.21);
+  color-scheme:light;
+}
+body{background:var(--pv-background);color:var(--pv-text)}
+body,button,input,textarea,select{font-family:Arial,"Segoe UI",Roboto,"Noto Sans",sans-serif!important}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.55}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid #118b6c;
+  outline-offset:3px
+}
+.ws-layout,.ws-main,.ws-content,.ws-panel,.ws-table-card,.ws-card,.ws-sale-grid>section{min-width:0}
+.ws-card{border-radius:16px}
+.ws-content{max-width:1590px}
+.ws-page-title{gap:18px}
+.ws-page-title h1{color:#153d2d;overflow-wrap:break-word}
+.ws-page-title p{max-width:660px}
+.ws-page-title .ws-action-row{justify-content:flex-end}
+.ws-section-title{line-height:1.45}
+.ws-table tbody td{line-height:1.55}
+.ws-stat{min-height:155px}
+.ws-stat small{font-size:12px}
+.ws-stat strong{font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+.ws-stat .stat-caption{line-height:1.55}
+.ws-overview-intro::after{pointer-events:none}
+.ws-alert-row>div:last-child{min-width:0;overflow-wrap:anywhere}
+.ws-banner{line-height:1.75}
+.ws-input,.ws-select,.ws-textarea{background:#fff;min-width:0}
+.ws-btn{font-weight:700}
+.ws-btn:active,.ws-small-button:active{transform:translateY(1px)}
+.ws-table-wrap{scrollbar-gutter:stable}
+.ws-filterbar{min-width:0}
+.ws-filterbar input{flex:1}
+.ws-table thead th{font-weight:700}
+.ws-batch{line-height:1.6}
+.ws-card-top{min-width:0}
+.ws-modal{overscroll-behavior:contain}
+.ws-modal .modal-actions{position:relative}
+.ws-overlay{overscroll-behavior:contain}
+body.pv-dialog-open{overflow:hidden}
+.ws-tabs button{line-height:1.45;font-weight:700}
+.ws-file-btn input[type="file"]{max-width:100%}
+
+/* Navigation: consistent active state and compact meaningful labels */
+.ws-sidebar{background:#fff}
+.ws-sidebar .ws-label{font-size:10px;letter-spacing:.055em}
+.ws-nav button{font-weight:600;line-height:1.5}
+.ws-nav button.active{font-weight:700}
+.ws-nav button[aria-current="page"]{color:#0e6b4e}
+.ws-header .crumb,.ws-header-date{line-height:1.55}
+.ws-header-button{font-size:12px}
+
+/* Less visual noise: system typography avoids broken Vietnamese combining marks */
+.section-kicker,.section-kicker.light,
+.ws-label,.auth-label,.solution-number,.band-label,.feature-card small{
+  letter-spacing:.015em!important;
+  font-feature-settings:normal;
+  text-rendering:optimizeLegibility;
+}
+.section-kicker{text-transform:none;font-weight:700}
+.hero-copy h1,.section-heading h2,.workflow-layout h2,.faq-layout h2,
+.auth-brand-main h1,.security-layout h2,.final-cta h2{
+  letter-spacing:-.015em!important;
+  line-height:1.22!important;
+  overflow-wrap:normal;
+}
+.section-heading h2{max-width:850px}
+.center-heading>p{max-width:680px}
+.hero-lead{line-height:1.9}
+.preview-metrics b{line-height:1.3}
+.feature-card p,.solution-card p{overflow-wrap:break-word}
+
+/* Lightweight skeleton states avoid a blank/unclear screen during API calls */
+.pv-loading{display:grid;gap:17px;max-width:100%;padding:0 0 30px;animation:pv-fade .25s ease both}
+.pv-loading__head,.pv-loading__line,.pv-loading__tile,.pv-loading__panel{
+  position:relative;overflow:hidden;background:#e6eee9;border-radius:12px
+}
+.pv-loading__head{width:min(420px,67%);height:34px;margin:10px 0 4px}
+.pv-loading__line{width:min(540px,88%);height:13px;border-radius:6px;margin:0 0 12px}
+.pv-loading__stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.pv-loading__tile{height:146px}
+.pv-loading__panels{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+.pv-loading__panel{height:270px}
+.pv-loading__head::after,.pv-loading__line::after,.pv-loading__tile::after,.pv-loading__panel::after{
+  content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,#fff9 51%,transparent 72%);
+  transform:translateX(-100%);animation:pv-shimmer 1.7s linear infinite
+}
+@keyframes pv-shimmer{to{transform:translateX(100%)}}
+@keyframes pv-fade{from{opacity:.55}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){
+  .pv-loading,.pv-loading__head::after,.pv-loading__line::after,
+  .pv-loading__tile::after,.pv-loading__panel::after{animation:none!important}
+}
+
+/* Sales: a stable live filter and trustworthy feedback */
+.ws-sale-grid .ws-filterbar{margin-bottom:14px}
+.ws-sale-grid .ws-filterbar .ws-input{min-height:48px}
+.pv-sale-result{font-size:12px;color:#718b7a;padding:6px 0 12px;line-height:1.5}
+.pv-sale-no-results{background:#fff;border:1px dashed #ccdfd0;border-radius:14px;padding:30px 18px;color:#688271;text-align:center;font-size:13px;line-height:1.7}
+.sale-product{transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease}
+.sale-product:hover{border-color:#c5dfd1;box-shadow:0 8px 24px #104d2c12}
+.sale-product .ws-btn{min-height:40px}
+.sale-cart{border-color:#dce8df}
+.sale-cart .ws-check{font-size:12px!important;line-height:1.65!important}
+.sale-cart .ws-check input{width:18px;height:18px}
+.cart-qty button{font-weight:700}
+#checkoutButton{min-height:50px;font-size:13px}
+#saleSearch{background:#fff}
+
+/* Empty table and long Vietnamese terms shouldn't force page overflow */
+.ws-table tbody td[colspan]{font-size:13px;color:#7a9282;line-height:1.7}
+.ws-table tbody td .pill{white-space:normal}
+.ws-table th,.ws-table td{overflow-wrap:break-word}
+
+/* Better modal text and visible close button */
+.ws-modal-top{align-items:center}
+.ws-modal .modal-close{display:grid;place-items:center;border:1px solid #e0eae2}
+.ws-modal .modal-close:focus-visible{outline-offset:2px}
+.ws-modal input,.ws-modal textarea,.ws-modal select{max-width:100%}
+.ws-notification{max-width:min(420px,calc(100vw - 28px))}
+
+/* Useful printing of data tables without navigation noise */
+@media print{
+  .ws-sidebar,.ws-header,.mobile-bottom-nav,.mobile-shade,.ws-action-row,.ws-notification,
+  #modalHost,.workspace-notice{display:none!important}
+  .ws-main{margin:0!important}
+  .ws-content{padding:0!important;max-width:100%!important}
+  .ws-card{break-inside:avoid;box-shadow:none;border-color:#ccd9cf}
+  .ws-table-wrap{overflow:visible}
+  .ws-table{width:100%;min-width:0}
+}
+@media(max-width:1100px) and (min-width:901px){
+  .ws-statgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ws-sale-grid{grid-template-columns:minmax(0,1fr) 290px}
+  .ws-content{padding-inline:24px}
+  .ws-card-top{flex-wrap:wrap}
+}
+@media(max-width:900px){
+  .ws-content{padding-bottom:calc(105px + env(safe-area-inset-bottom,0px))}
+  .ws-page-title .ws-action-row{justify-content:flex-start}
+  .ws-stat{min-height:132px}
+  .ws-stat small{font-size:11px}
+  .ws-table tbody td{overflow-wrap:anywhere}
+  .pv-loading__stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pv-loading__panels{grid-template-columns:1fr}
+  .pv-loading__panel{height:200px}
+  .sale-cart{position:static}
+  .ws-modal{max-height:calc(100dvh - 28px)}
+  .ws-btn,.ws-small-button{min-height:44px}
+  .hero-copy h1{line-height:1.22!important}
+}
+@media(max-width:640px){
+  .ws-page-title h1{font-size:23px}
+  .ws-page-title .ws-action-row{gap:8px}
+  .ws-sale-grid{gap:14px}
+  .ws-sale-grid .sale-product b{font-size:14px}
+  .ws-sale-grid .sale-product small{font-size:12px}
+  .pv-sale-result{font-size:12px}
+  .ws-modal{max-height:calc(92dvh - env(safe-area-inset-bottom,0px))}
+  .ws-table tbody td::before{font-size:11px;letter-spacing:0}
+  .ws-content{overflow-x:clip}
+  .pv-loading__tile{height:112px}
+  .pv-loading__head{height:29px}
+  .pv-loading__line{height:11px}
+}

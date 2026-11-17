@@ -141,3 +141,25 @@ Nếu frontend vẫn cũ, tải cứng trang `Ctrl+Shift+R`. Nếu code Python t
 - [ ] Đăng nhập/đăng ký và thử điều hướng ở viewport 360 / 390 / 768 / desktop
 - [ ] Thử kho, bán thuốc, giỏ hàng, modal và menu điện thoại
 - [ ] Chỉ dùng dữ liệu giả; không nhập thông tin bệnh nhân thật
+
+
+## Nâng cấp 0.3.0: deploy có kiểm thử, backup và rollback
+
+Bản deploy mới dùng `tools/build_assets.py --check` và `python -m unittest -v test_app.py` **trước khi thay đổi code**. Sau đó sao lưu snapshot SQLite bằng SQLite backup API, sao lưu `server.py`, `static/`, `tools/`, tự dừng `PharmoraBackend` nếu đang chạy, thay mã nguồn và khởi động lại. Nếu kiểm tra cục bộ `http://127.0.0.1:8000/api/me` thất bại, script cố khôi phục ứng dụng cũ và khởi động lại dịch vụ. Tệp SQLite trên hệ thống đang dùng không bị thay thế.
+
+```powershell
+# Terminal laptop
+ssh Administrator@103.77.172.235
+
+# PowerShell Administrator trên VPS
+Invoke-WebRequest "https://raw.githubusercontent.com/ngochieu1762005/Pharmora-/main/deploy.ps1" -OutFile "C:\web\deploy.ps1"
+& "C:\web\deploy.ps1"
+Get-Service PharmoraBackend,CaddyWeb
+curl.exe -sS http://127.0.0.1:8000/api/me
+```
+
+**Lưu ý:** nếu bạn chủ động dừng `PharmoraBackend` trước khi chạy deploy, script giữ nguyên trạng thái dừng và bạn cần `Start-Service PharmoraBackend` sau khi deploy thành công. Nếu dịch vụ đang chạy, script tự khởi động lại sau cập nhật.
+
+Để kiểm tra bên ngoài VPS, thử `https://pharmavision.hieuds.com` từ mạng khác. Backup nằm tại `C:\web\backups\<timestamp>` và cần được bảo vệ quyền truy cập. Hãy sao lưu độc lập trên ổ/thiết bị khác; một bản sao lưu cùng VPS không đủ bảo vệ khỏi mất VPS.
+
+> **Chú ý:** Dù script có kiểm tra health và rollback phần code, đây vẫn là quy trình triển khai cho MVP. Nó không tự động di chuyển schema dữ liệu, không phải quy trình zero-downtime, và chưa thay thế giám sát/backup chuyên nghiệp.

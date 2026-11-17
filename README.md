@@ -1,8 +1,23 @@
 # PharmaVision AI
 
+
+## Phiên bản 0.3.0 — Giao diện thống nhất, thao tác ổn định
+
+- **Bộ giao diện được build thành một file** `static/app.css`, từ các nguồn CSS có chú thích thứ tự. Không còn tải bốn stylesheet độc lập trên mỗi trang.
+- **Tiếng Việt:** font hệ thống Arial / Segoe UI / Roboto / Noto Sans, không cần Google Fonts; giảm giãn chữ ở các nhãn có dấu.
+- **Dashboard desktop + mobile:** điều hướng thống nhất, thanh công cụ và sidebar/bottom navigation; màn hình tải có skeleton dễ nhận biết.
+- **Bán thuốc:** tìm kiếm không dấu (ví dụ `duoc` tìm được `dược`), lọc ngay không reset biểu mẫu, giữ trạng thái đơn bán khi tăng giảm số lượng, ngăn gửi lặp khi nhấn hai lần.
+- **Điều hướng:** trạng thái URL `?view=...`, hỗ trợ Back/Forward, chống phản hồi bất đồng bộ từ màn hình cũ ghi đè màn hình đang xem.
+- **Hộp thoại:** Escape để đóng, điều hướng Tab trong popup, trả focus về nút trước đó.
+- **Chất lượng triển khai:** `tools/build_assets.py --check`, kiểm thử tích hợp, CI GitHub Actions cho Python 3.11/3.13, script deploy có sao lưu SQLite và cố gắng rollback khi thất bại.
+- **Không thay đổi dữ liệu:** giữ nguyên database SQLite và API; đây vẫn là bản demo, **không phải** hệ thống đã chứng nhận GPP hay AI tư vấn lâm sàng.
+
+Xem [Bảng QA và giới hạn phiên bản](docs/QA_RELEASE.md), [Hướng dẫn triển khai Windows](docs/DEPLOY_WINDOWS.md) và [Lịch sử thay đổi](CHANGELOG.md).
+
+
 **Nền tảng quản trị và hỗ trợ ra quyết định thông minh cho nhà thuốc**
 
-Phiên bản: **0.2.0 — Local MVP** · Giao diện tiếng Việt · Python + SQLite + HTML/CSS/JavaScript
+Phiên bản: **0.3.0 — Technical MVP / Design Stabilization** · Giao diện tiếng Việt · Python + SQLite + HTML/CSS/JavaScript
 
 > **Quan trọng:** Đây là phiên bản MVP để trình diễn và phát triển sản phẩm. Không dùng với thông tin bệnh nhân thật, không phải hệ thống nhà thuốc đã được chứng nhận GPP, không kết nối trực tiếp với Bộ Y tế và **chưa cung cấp AI lâm sàng**. Mọi thông tin về thuốc, đơn kê, cảnh báo thu hồi cần được dược sĩ kiểm tra bằng nguồn có thẩm quyền.
 
@@ -262,3 +277,20 @@ Tệp thay đổi: `static/typography.css`, `static/styles.css`, `static/index.h
 
 
 **Font hiện hành:** Bộ font hệ thống Arial / Segoe UI / Roboto / Noto Sans đã thay cho Be Vietnam Pro. Các hướng dẫn mô tả Be Vietnam Pro ở các mục lịch sử trước đây không còn áp dụng; xem mục Khắc phục lỗi chữ tiếng Việt bên trên.
+
+
+## Cập nhật 0.3.0 trên VPS có Windows Services
+
+Lệnh mới tự kiểm tra, sao lưu, dừng/khởi động lại **PharmoraBackend** nếu dịch vụ đang chạy, và kiểm tra trạng thái qua API. Bạn không cần dừng Caddy hay chạy Python thủ công:
+
+```powershell
+ssh Administrator@103.77.172.235
+# Trên VPS, chuyển sang PowerShell nếu SSH vào CMD.
+Invoke-WebRequest "https://raw.githubusercontent.com/ngochieu1762005/Pharmora-/main/deploy.ps1" -OutFile "C:\web\deploy.ps1"
+& "C:\web\deploy.ps1"
+Get-Service PharmoraBackend,CaddyWeb
+```
+
+**Nếu trước khi deploy bạn đã tự dừng PharmoraBackend, script sẽ giữ dịch vụ ở trạng thái dừng; hãy chạy `Start-Service PharmoraBackend` sau khi script báo thành công.** Thư mục backup: `C:\web\backups\<timestamp>`. SQLite, file `.env` và thư mục tải lên không bị ghi đè. Khi giao diện cũ vẫn còn, thử `Ctrl+Shift+R` hoặc cửa sổ ẩn danh.
+
+Thay đổi CSS tại các file nguồn `static/styles.css`, `static/mobile.css`, `static/design.css`, `static/typography.css`, `static/polish.css`, rồi chạy `python tools/build_assets.py` để cập nhật `static/app.css`. CI yêu cầu file tổng hợp này đồng bộ với nguồn.

@@ -119,7 +119,7 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(a.req('/api/sales',{'items':[{'product_id':pid,'qty':1}],'pharmacist_verified':True,'rx_verified':True,'prescription_code':'P-1'},'POST')[0],201)
     def test_05_static(self):
         c=Client(self.base)
-        for path in ('/','/login','/register','/app','/workspace.js','/styles.css','/mobile.css','/mobile.js'):
+        for path in ('/','/login','/register','/app','/workspace.js','/styles.css','/mobile.css','/mobile.js','/app.css'):
             status,blob=c.req(path)
             self.assertEqual(status,200)
             self.assertGreater(len(blob),50)
@@ -147,7 +147,7 @@ class ApiTests(unittest.TestCase):
             status, payload = client.req(path)
             self.assertEqual(status, 200)
             html = payload.decode('utf-8')
-            self.assertIn('href="/design.css"', html)
+            self.assertIn('href="/app.css"', html)
             self.assertIn('src="/design.js"', html)
         status, payload = client.req('/app')
         html = payload.decode('utf-8')
@@ -170,7 +170,7 @@ class ApiTests(unittest.TestCase):
             html = response.decode('utf-8')
             self.assertIn('charset="UTF-8"', html.lower().replace('charset="utf-8"','charset="UTF-8"'))
             self.assertNotIn('fonts.googleapis.com', html)
-            self.assertIn('href="/typography.css"', html)
+            self.assertIn('href="/app.css"', html)
             self.assertIn('src="/icons.js"', html)
 
     def test_09_system_font_without_google_dependency(self):
@@ -181,12 +181,39 @@ class ApiTests(unittest.TestCase):
             html = response.decode('utf-8')
             self.assertNotIn('fonts.googleapis.com', html)
             self.assertNotIn('fonts.gstatic.com', html)
-            self.assertIn('href="/typography.css"', html)
+            self.assertIn('href="/app.css"', html)
         status, response = client.req('/typography.css')
         self.assertEqual(status, 200)
         css = response.decode('utf-8')
         self.assertIn("--pv-font:Arial", css)
         self.assertIn(".section-kicker,.section-kicker.light", css)
         self.assertNotIn("'Be Vietnam Pro'", css)
+
+    def test_10_unified_stylesheet_and_asset_pipeline(self):
+        import importlib.util
+        builder = Path(__file__).resolve().parent / 'tools' / 'build_assets.py'
+        spec = importlib.util.spec_from_file_location('pharmora_css_build', builder)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        expected = module.build_css()
+        bundled = (Path(__file__).resolve().parent / 'static' / 'app.css').read_text(encoding='utf-8')
+        self.assertEqual(bundled, expected)
+        self.assertIn('font-family:Arial', bundled)
+        self.assertIn('.pv-sale-no-results', bundled)
+        self.assertIn('.section-kicker', bundled)
+        client = Client(self.base)
+        status, response = client.req('/app.css')
+        self.assertEqual(status, 200)
+        self.assertEqual(response.decode('utf-8'), bundled)
+        for path in ('/','/login','/register','/app'):
+            status, payload = client.req(path)
+            self.assertEqual(status, 200)
+            html = payload.decode('utf-8')
+            self.assertEqual(html.count('rel="stylesheet"'), 1)
+            self.assertIn('href="/app.css"', html)
+        status, response = client.req('/app')
+        html = response.decode('utf-8')
+        self.assertIn('id="mobileBottomNav"', html)
+        self.assertIn('id="headerQuickSearch"', html)
 
 if __name__=='__main__':unittest.main()

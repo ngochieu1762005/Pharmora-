@@ -1,0 +1,44 @@
+name: Verify PharmaVision
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Configure Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Check compiled CSS matches source
+        run: python tools/build_assets.py --check
+
+      - name: Check Python syntax
+        run: python -m py_compile server.py test_app.py tools/build_assets.py
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check static/site.js
+          node --check static/workspace.js
+          node --check static/mobile.js
+          node --check static/design.js
+          node --check static/icons.js
+
+      - name: Integration tests
+        run: python -m unittest -v test_app.py

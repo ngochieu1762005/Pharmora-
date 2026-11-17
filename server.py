@@ -38,7 +38,8 @@ ALLOWED_STATIC = {'/': 'index.html', '/index.html': 'index.html', '/login': 'log
                   '/styles.css': 'styles.css', '/site.js': 'site.js', '/workspace.js': 'workspace.js',
                   '/mobile.css': 'mobile.css', '/mobile.js': 'mobile.js',
                   '/design.css': 'design.css', '/design.js': 'design.js',
-                  '/typography.css': 'typography.css', '/icons.js': 'icons.js'}
+                  '/typography.css': 'typography.css', '/icons.js': 'icons.js',
+                  '/app.css': 'app.css'}
 
 
 @contextmanager
