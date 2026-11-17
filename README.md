@@ -160,16 +160,16 @@ ssh Administrator@103.77.172.235
 # Nếu SSH mở CMD, gõ: powershell
 
 # Trên VPS, trong PowerShell:
-Invoke-WebRequest "https://raw.githubusercontent.com/ngochieu1762005/Pharmora-/main/deploy.ps1" -OutFile "C:\\web\\deploy.ps1"
-& "C:\\web\\deploy.ps1"
+Invoke-WebRequest "https://raw.githubusercontent.com/ngochieu1762005/Pharmora-/main/deploy.ps1" -OutFile "C:\web\deploy.ps1"
+& "C:\web\deploy.ps1"
 
 # Khi kiểm thử và cập nhật thành công, khởi động lại Python:
-cd C:\\web\\pharmora
+cd C:\web\pharmora
 $env:PHARMAVISION_SECURE_COOKIE="1"
-& "C:\\Program Files\\Python313\\python.exe" server.py
+& "C:\Program Files\Python313\python.exe" server.py
 ```
 
-**Caddy không cần khởi động lại khi chỉ đổi code Python/HTML/CSS/JS.** Khi sửa Caddyfile, dùng `C:\\caddy\\caddy.exe validate --config C:\\caddy\\Caddyfile` và `C:\\caddy\\caddy.exe reload --config C:\\caddy\\Caddyfile`. Bản demo đang chạy thủ công từ SSH chưa tự khởi động 24/7.
+**Caddy không cần khởi động lại khi chỉ đổi code Python/HTML/CSS/JS.** Khi sửa Caddyfile, dùng `C:\caddy\caddy.exe validate --config C:\caddy\Caddyfile` và `C:\caddy\caddy.exe reload --config C:\caddy\Caddyfile`. Bản demo đang chạy thủ công từ SSH chưa tự khởi động 24/7.
 
 ### Giao diện điện thoại
 
