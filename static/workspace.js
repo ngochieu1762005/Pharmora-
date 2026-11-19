@@ -52,7 +52,7 @@ function changePage(p,updateHistory=true){
   S.renderVersion++;
   S.page=p;S.search='';S.cart=S.cart||new Map();
   $('#breadcrumb').textContent=names[p];
-  $('[data-page]').forEach(el=>{
+  $$('[data-page]').forEach(el=>{
     const active=el.dataset.page===p;
     el.classList.toggle('active',active);
     if(active)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');
@@ -88,7 +88,7 @@ function salesRender(){const products=S.products;const orderItems=[...S.cart.ent
 function filterSaleProducts(){
   const query=normalizeSearch(S.search.trim());
   let shown=0;
-  $('.sale-product').forEach(card=>{
+  $$('.sale-product').forEach(card=>{
     const matches=card.dataset.search.includes(query);
     card.hidden=!matches;
     if(matches)shown++;
@@ -112,7 +112,7 @@ async function settingsPage(){const viewVersion=S.renderVersion;const users=isAd
 function passwordModal(){showModal('Đổi mật khẩu tài khoản',`<form id="pwdForm"><label>Mật khẩu hiện tại</label><input class="ws-input" type="password" name="old_password" autocomplete="current-password" required><label>Mật khẩu mới (ít nhất 10 ký tự)</label><input class="ws-input" type="password" name="new_password" minlength="10" autocomplete="new-password" required><div class="modal-actions"><button type="button" class="ws-btn soft" id="cancelForm">Hủy</button><button class="ws-btn">Đổi mật khẩu</button></div></form>`,()=>{$('#cancelForm').onclick=closeModal;$('#pwdForm').onsubmit=e=>{e.preventDefault();runSave('/api/password',Object.fromEntries(new FormData(e.target)),()=>settingsPage())}})}
 function staffModal(){showModal('Thêm tài khoản nhân viên',`<form id="staffForm"><label>Họ và tên *</label><input class="ws-input" name="full_name" required><label>Email đăng nhập *</label><input class="ws-input" name="email" type="email" required><label>Mật khẩu ban đầu (tối thiểu 10 ký tự)</label><input class="ws-input" name="password" type="password" autocomplete="new-password" minlength="10" required><label>Vai trò</label><select class="ws-select" name="role"><option value="staff">Nhân viên</option><option value="admin">Quản trị viên</option></select><div class="modal-actions"><button type="button" class="ws-btn soft" id="cancelForm">Hủy</button><button class="ws-btn">Tạo tài khoản</button></div></form>`,()=>{$('#cancelForm').onclick=closeModal;$('#staffForm').onsubmit=e=>{e.preventDefault();runSave('/api/users',Object.fromEntries(new FormData(e.target)),()=>settingsPage())}})}
 async function boot(){try{const me=await api('/api/me');if(!me.authenticated){location.replace('/login');return}S.csrf=me.csrf;S.user=me.user;$('#pharmacyName').textContent=S.user.pharmacy_name;$('#userName').textContent=S.user.full_name;$('#userRole').textContent=S.user.role==='admin'?'Quản trị viên':'Nhân viên nhà thuốc';const av=S.user.full_name.trim().split(' ').slice(-2).map(x=>x[0]?.toUpperCase()).join('');$('#userAvatar').textContent=av;$('#headerAvatar').textContent=av;$('#demoBadge').hidden=!S.user.demo;const urlPage=new URLSearchParams(location.search).get('view');changePage(names[urlPage]?urlPage:'overview',false)}catch(e){loadError(e)}}
-$('[data-page]').forEach(b=>b.addEventListener('click',()=>changePage(b.dataset.page)));
+$$('[data-page]').forEach(b=>b.addEventListener('click',()=>changePage(b.dataset.page)));
 window.addEventListener('popstate',()=>{const p=new URLSearchParams(location.search).get('view');changePage(names[p]?p:'overview',false)});
 $('#logoutButton').onclick=async()=>{try{await api('/api/logout','POST')}catch{}location.assign('/login')};
 $('#menuToggle').onclick=()=>{$('#sidebar').classList.toggle('open');$('#mobileShade').classList.toggle('open')};$('#mobileShade').onclick=()=>{$('#sidebar').classList.remove('open');$('#mobileShade').classList.remove('open')};
