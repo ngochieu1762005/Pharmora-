@@ -125,6 +125,51 @@ def init_database():
         ''')
 
 
+        c.execute("BEGIN IMMEDIATE")
+        columns = {row['name'] for row in c.execute("PRAGMA table_info(products)")}
+        for field in ('sku', 'dosage', 'side_effects'):
+            if field not in columns:
+                c.execute(f"ALTER TABLE products ADD COLUMN {field} TEXT NOT NULL DEFAULT ''")
+        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS product_sku ON products(pharmacy_id, sku COLLATE NOCASE) WHERE sku != ''")
+        c.execute("""CREATE TABLE IF NOT EXISTS reference_docs (
+            id INTEGER PRIMARY KEY, pharmacy_id INTEGER NOT NULL REFERENCES pharmacies(id),
+            title TEXT NOT NULL, content TEXT NOT NULL)""")
+        c.commit()
+
+
+def reference_text(data):
+    if not data.get('pdf'):
+        return require_text(data.get('text'), 'Nội dung tài liệu', 1, 1000000)
+    raw = base64.b64decode(data['pdf'], validate=True)
+    if len(raw) > 3*1024*1024 or not raw.startswith(b'%PDF-'):
+        raise ApiError(400, 'PDF không hợp lệ hoặc vượt 3 MB.')
+    if not shutil.which('pdftotext'):
+        raise ApiError(501, 'Máy chủ cần poppler-utils để đọc PDF. Có thể tải TXT hoặc dán văn bản.')
+    try:
+        result = subprocess.run(['pdftotext','-enc','UTF-8','-','-'], input=raw,
+                                capture_output=True, timeout=15)
+    except subprocess.TimeoutExpired:
+        raise ApiError(400, 'PDF mất quá nhiều thời gian để đọc.')
+    if result.returncode or not result.stdout.strip():
+        raise ApiError(400, 'PDF không có lớp văn bản đọc được. Hãy OCR hoặc dán nội dung.')
+    return require_text(result.stdout.decode('utf-8'), 'Nội dung PDF', 1, 1000000)
+
+
+def reference_matches(conn, pharmacy, question):
+    words = set(re.findall(r'\w{2,}', question.casefold())) - {'có','là','của','cho','và','như','nào','bao','nhiêu'}
+    hits = []
+    for doc in conn.execute('SELECT title,content FROM reference_docs WHERE pharmacy_id=?', (pharmacy,)):
+        for page, body in enumerate(doc['content'].split('\f'), 1):
+            for paragraph in body.splitlines():
+                tokens = set(re.findall(r'\w+', paragraph.casefold()))
+                score = len(tokens & words)
+                if score:
+                    hits.append((score, doc['title'], page, paragraph.strip()[:600]))
+                    hits.sort(key=lambda hit: -hit[0])
+                    del hits[3:]
+    return [{'title':title,'page':page,'excerpt':excerpt} for _,title,page,excerpt in hits]
+
+
 def now():
     return datetime.now().astimezone().isoformat(timespec='seconds')
 
@@ -331,6 +376,8 @@ class Handler(BaseHTTPRequestHandler):
                 return {'metrics':{'products':len(products),'stock_units':sum(p['stock'] for p in products),'low_stock':low,'expiry_risks':expiry,'revenue_today':revenue[0],'orders_today':revenue[1]},
                         'daily':[dict(x) for x in daily], 'recent_sales':[dict(x) for x in recent],
                         'recent_activity':[dict(x) for x in audit_recent], 'alerts':alerts, 'demo':bool(user['demo'])}
+            if path=='/api/references':
+                return {'documents':[dict(row) for row in c.execute('SELECT id,title,length(content) AS size FROM reference_docs WHERE pharmacy_id=? ORDER BY id DESC',(ph,))]}
             if path=='/api/products':
                 rows=c.execute('SELECT * FROM products WHERE pharmacy_id=? ORDER BY id DESC',(ph,)).fetchall()
                 batches=c.execute('SELECT * FROM batches WHERE pharmacy_id=? ORDER BY expires, id',(ph,)).fetchall()
@@ -339,7 +386,7 @@ class Handler(BaseHTTPRequestHandler):
                 return {'products':[{**dict(p),'batches':grouped.get(p['id'],[]),'stock':sum(b['qty'] for b in grouped.get(p['id'],[])),
                                      'sellable':sum(b['qty'] for b in grouped.get(p['id'],[]) if b['expires']>=date.today().isoformat() and b['status']=='active')} for p in rows]}
             if path=='/api/customers':
-                return {'customers':[dict(x) for x in c.execute('SELECT * FROM customers WHERE pharmacy_id=? ORDER BY id DESC',(ph,))]}
+                return {'customers':[dict(x) for x in c.execute('SELECT customers.*, (SELECT COUNT(*) FROM sales WHERE sales.customer_id=customers.id AND sales.pharmacy_id=customers.pharmacy_id) AS purchases FROM customers WHERE pharmacy_id=? ORDER BY id DESC',(ph,))]}
             customer_history=re.fullmatch(r'/api/customers/(\d+)/history',path)
             if customer_history:
                 cid=int(customer_history.group(1))
@@ -385,7 +432,7 @@ class Handler(BaseHTTPRequestHandler):
             if not self.origin_ok():raise ApiError(403,'Nguồn yêu cầu không được chấp nhận.')
             path=urlsplit(self.path).path
             if path not in {'/api/register','/api/login','/api/logout','/api/password','/api/users','/api/products','/api/stock/import','/api/stock/adjust',
-                            '/api/stock/hold','/api/sales','/api/customers','/api/recalls','/api/ocr','/api/copilot'}:
+                            '/api/stock/hold','/api/sales','/api/customers','/api/recalls','/api/ocr','/api/copilot','/api/references','/api/products/edit'}:
                 raise ApiError(404,'API không tồn tại.')
             data=self.json_body() if path!='/api/logout' else {}
             result,extra=self.post_api(path,data)
@@ -466,7 +513,20 @@ class Handler(BaseHTTPRequestHandler):
                     audit(c,ph,uid,'account.add',{'email':email,'role':role})
                 self.transaction(c,work)
             return {'ok':True},None
-        if path=='/api/products':
+        if path=='/api/references':
+            self.require(admin=True)
+            title=require_text(data.get('title'),'Tên nguồn',2,180)
+            content=reference_text(data)
+            with database() as c:
+                self.transaction(c,lambda: c.execute('INSERT INTO reference_docs(pharmacy_id,title,content) VALUES(?,?,?)',(ph,title,content)))
+            return {'ok':True},None
+        if path in ('/api/products','/api/products/edit'):
+            editing=path.endswith('/edit')
+            if editing:
+                self.require(admin=True)
+            sku=require_text(data.get('sku',''),'Mã sản phẩm',0,65)
+            dosage=require_text(data.get('dosage',''),'Liều dùng',0,4000)
+            effects=require_text(data.get('side_effects',''),'Tác dụng phụ',0,4000)
             name=require_text(data.get('name'),'Tên thuốc',2,120)
             active=require_text(data.get('active',''),'Hoạt chất',0,160)
             strength=require_text(data.get('strength',''),'Hàm lượng',0,80)
@@ -477,8 +537,19 @@ class Handler(BaseHTTPRequestHandler):
             reorder=number(data.get('reorder_point',20),'Ngưỡng tồn tối thiểu',0,10000000)
             with database() as c:
                 def work():
+                    if sku and c.execute("SELECT 1 FROM products WHERE pharmacy_id=? AND sku=? COLLATE NOCASE AND id!=?",(ph,sku,data.get('id',0) if editing else 0)).fetchone():
+                        raise ApiError(400,'Mã sản phẩm đã được sử dụng.')
+                    if editing:
+                        pid=number(data.get('id'),'Sản phẩm',1)
+                        changed=c.execute('UPDATE products SET name=?,active=?,strength=?,form=?,unit=?,barcode=?,price=?,reorder_point=?,requires_rx=?,sku=?,dosage=?,side_effects=? WHERE pharmacy_id=? AND id=?',
+                            (name,active,strength,form,unit,barcode,price,reorder,int(data.get('requires_rx') is True),sku,dosage,effects,ph,pid))
+                        if not changed.rowcount:
+                            raise ApiError(404,'Không tìm thấy sản phẩm.')
+                        audit(c,ph,uid,'product.edit',{'product_id':pid})
+                        return pid
                     pid=c.execute('INSERT INTO products(pharmacy_id,name,active,strength,form,unit,barcode,price,reorder_point,requires_rx,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
                         (ph,name,active,strength,form,unit,barcode,price,reorder,int(data.get('requires_rx') is True),now())).lastrowid
+                    c.execute('UPDATE products SET sku=?,dosage=?,side_effects=? WHERE id=?',(sku,dosage,effects,pid))
                     audit(c,ph,uid,'product.create',{'product_id':pid,'name':name})
                     return pid
                 pid=self.transaction(c,work)
@@ -626,13 +697,14 @@ class Handler(BaseHTTPRequestHandler):
                 if not matches:
                     tokens=[s for s in re.split(r'\W+',question.casefold()) if len(s)>=4]
                     matches=[r for r in rows if any(t in (r['name']+' '+r['active']).casefold() for t in tokens)]
+                sources=reference_matches(c,ph,question)
                 responses=[]
                 for r in matches[:4]:
                     b=c.execute('SELECT lot,expires,qty,status FROM batches WHERE product_id=? AND pharmacy_id=?',(r['id'],ph)).fetchall()
                     responses.append({'name':r['name'],'active':r['active'],'strength':r['strength'],'form':r['form'],
                                       'requires_rx':bool(r['requires_rx']), 'lots':[dict(x) for x in b],
                                       'sellable':sum(x['qty'] for x in b if x['expires']>=date.today().isoformat() and x['status']=='active')})
-            return {'matches':responses,'message':'Tra cứu danh mục và tồn kho nội bộ; chưa xác minh thông tin lâm sàng hoặc tương tác thuốc. Dược sĩ phải kiểm tra nguồn chuyên môn đáng tin cậy và đơn thuốc.'},None
+            return {'sources':sources,'matches':responses,'message':'Tra cứu danh mục và tồn kho nội bộ; chưa xác minh thông tin lâm sàng hoặc tương tác thuốc. Dược sĩ phải kiểm tra nguồn chuyên môn đáng tin cậy và đơn thuốc.'},None
         if path=='/api/ocr':
             src=data.get('image_data','')
             if not isinstance(src,str) or not re.match(r'^data:image/(png|jpeg|webp);base64,',src,re.I):
