@@ -125,7 +125,7 @@ class ApiTests(unittest.TestCase):
         product={'name':'Sản phẩm thử','strength':'Dòng một\nDòng hai','sku':'TEST-01','dosage':'Theo nhãn','side_effects':'Theo tài liệu'}
         status, saved=admin.req('/api/products',product,'POST')
         self.assertEqual(status,201)
-        self.assertEqual(admin.req('/api/products',product,'POST')[0],400)
+        self.assertEqual(admin.req('/api/products',product,'POST')[0],409)
         product.update(id=saved['id'], name='Tên đã sửa')
         self.assertEqual(other.req('/api/products/edit',product,'POST')[0],404)
         self.assertEqual(admin.req('/api/products/edit',product,'POST')[0],200)
