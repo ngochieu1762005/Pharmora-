@@ -239,4 +239,34 @@ class ApiTests(unittest.TestCase):
         self.assertIn('id="mobileBottomNav"', html)
         self.assertIn('id="headerQuickSearch"', html)
 
+
+    def test_checkout_retries_do_not_duplicate_stock(self):
+        client=Client(self.base)
+        client.register('retry-check@test.vn','Kho kiểm thử')
+        status,product=client.req('/api/products',{'name':'Thuốc kiểm thử giao dịch','price':15000,'barcode':'8931234567890'},'POST')
+        self.assertEqual(status,201)
+        pid=product['id']
+        self.assertEqual(client.req('/api/stock/import',{'product_id':pid,'lot':'SAFE-01','expires':'2029-12-30','qty':10},'POST')[0],200)
+        payload={'items':[{'product_id':pid,'qty':3}],'pharmacist_verified':True,'request_id':'retry_request_00001'}
+        status,first=client.req('/api/sales',payload,'POST')
+        self.assertEqual(status,201)
+        status,repeat=client.req('/api/sales',payload,'POST')
+        self.assertEqual(status,201)
+        self.assertTrue(repeat['replayed'])
+        self.assertEqual(repeat['id'],first['id'])
+        self.assertEqual(client.req('/api/products')[1]['products'][0]['stock'],7)
+        self.assertEqual(client.req('/api/sales',{**payload,'items':[{'product_id':pid,'qty':2}]},'POST')[0],409)
+        self.assertEqual(client.req('/api/products')[1]['products'][0]['stock'],7)
+
+    def test_barcode_conflict_and_invalid_pdf(self):
+        client=Client(self.base)
+        client.register('barcode-check@test.vn','Kho mã vạch thử')
+        status,product=client.req('/api/products',{'name':'Thuốc barcode A','barcode':'8931234567891'},'POST')
+        self.assertEqual(status,201)
+        self.assertEqual(client.req('/api/products',{'name':'Thuốc barcode B','barcode':'8931234567891'},'POST')[0],409)
+        status,other=client.req('/api/products',{'name':'Thuốc barcode C','barcode':'8931234567892'},'POST')
+        self.assertEqual(status,201)
+        self.assertEqual(client.req('/api/products/edit',{'id':other['id'],'name':'Thuốc barcode C','barcode':'8931234567891'},'POST')[0],409)
+        self.assertEqual(client.req('/api/references',{'title':'Tài liệu lỗi','pdf':'invalid-base64!'},'POST')[0],400)
+
 if __name__=='__main__':unittest.main()
