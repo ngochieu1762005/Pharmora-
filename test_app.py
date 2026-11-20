@@ -117,6 +117,29 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(a.req('/api/sales',{'items':[{'product_id':pid,'qty':1}],'pharmacist_verified':True},'POST')[0],400)
         self.assertEqual(a.req('/api/sales',{'items':[{'product_id':pid,'qty':1}],'pharmacist_verified':True,'rx_verified':True},'POST')[0],400)
         self.assertEqual(a.req('/api/sales',{'items':[{'product_id':pid,'qty':1}],'pharmacist_verified':True,'rx_verified':True,'prescription_code':'P-1'},'POST')[0],201)
+    def test_catalog_and_references(self):
+        admin=Client(self.base)
+        admin.register('catalog@test.vn','Catalog A')
+        other=Client(self.base)
+        other.register('independent@test.vn','Catalog B')
+        product={'name':'Sản phẩm thử','strength':'Dòng một\nDòng hai','sku':'TEST-01','dosage':'Theo nhãn','side_effects':'Theo tài liệu'}
+        status, saved=admin.req('/api/products',product,'POST')
+        self.assertEqual(status,201)
+        self.assertEqual(admin.req('/api/products',product,'POST')[0],400)
+        product.update(id=saved['id'], name='Tên đã sửa')
+        self.assertEqual(other.req('/api/products/edit',product,'POST')[0],404)
+        self.assertEqual(admin.req('/api/products/edit',product,'POST')[0],200)
+        item=admin.req('/api/products')[1]['products'][0]
+        for field,value in product.items():
+            self.assertEqual(item[field],value)
+        source={'title':'Tài liệu kiểm thử','text':'Trang đầu\fMẫu tham chiếu SKU'}
+        self.assertEqual(admin.req('/api/references',source,'POST')[0],200)
+        query={'question':'tham chiếu'}
+        hits=admin.req('/api/copilot',query,'POST')[1]['sources']
+        self.assertEqual(hits,[{'title':source['title'],'page':2,'excerpt':'Mẫu tham chiếu SKU'}])
+        self.assertEqual(other.req('/api/references')[1]['documents'],[])
+        self.assertEqual(other.req('/api/copilot',query,'POST')[1]['sources'],[])
+
     def test_05_static(self):
         c=Client(self.base)
         for path in ('/','/login','/register','/app','/workspace.js','/styles.css','/mobile.css','/mobile.js','/app.css'):
