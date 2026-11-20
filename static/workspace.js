@@ -169,7 +169,7 @@ async function checkout(){
  const data={items,customer_id:$('#saleCustomer').value||null,pharmacist_verified:$('#saleVerified').checked,rx_verified:$('#rxVerified').checked,prescription_code:$('#rxCode').value.trim()};
  if(!data.pharmacist_verified)return notify('Cần xác nhận kiểm tra đơn bán.',true);
  const signature=JSON.stringify(data);
- if(!S.checkoutRequest||S.checkoutRequest.signature!==signature)S.checkoutRequest={signature,key:crypto.randomUUID?crypto.randomUUID():('sale_'+Date.now()+'_'+Math.random().toString(36).slice(2))};
+ if(!S.checkoutRequest||S.checkoutRequest.signature!==signature)S.checkoutRequest={signature,key:globalThis.crypto?.randomUUID?.()||('sale_'+Date.now()+'_'+Math.random().toString(36).slice(2))};
  data.request_id=S.checkoutRequest.key;
  S.checkoutPending=true;if(checkoutBtn){checkoutBtn.disabled=true;checkoutBtn.textContent='Đang lưu đơn bán…'}
  try{
