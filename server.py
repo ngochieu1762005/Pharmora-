@@ -5,6 +5,7 @@ No online clinical or regulatory integrations are implied.
 """
 import argparse
 import base64
+import binascii
 from contextlib import contextmanager
 from datetime import date, timedelta, datetime
 import hashlib
@@ -131,6 +132,12 @@ def init_database():
             if field not in columns:
                 c.execute(f"ALTER TABLE products ADD COLUMN {field} TEXT NOT NULL DEFAULT ''")
         c.execute("CREATE UNIQUE INDEX IF NOT EXISTS product_sku ON products(pharmacy_id, sku COLLATE NOCASE) WHERE sku != ''")
+        c.execute("CREATE INDEX IF NOT EXISTS product_barcode_lookup ON products(pharmacy_id, barcode COLLATE NOCASE)")
+        sales_columns = {row['name'] for row in c.execute("PRAGMA table_info(sales)")}
+        for field in ('request_key', 'request_hash'):
+            if field not in sales_columns:
+                c.execute(f"ALTER TABLE sales ADD COLUMN {field} TEXT NOT NULL DEFAULT ''")
+        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS sale_idempotency ON sales(pharmacy_id, request_key) WHERE request_key != ''")
         c.execute("""CREATE TABLE IF NOT EXISTS reference_docs (
             id INTEGER PRIMARY KEY, pharmacy_id INTEGER NOT NULL REFERENCES pharmacies(id),
             title TEXT NOT NULL, content TEXT NOT NULL)""")
@@ -140,7 +147,10 @@ def init_database():
 def reference_text(data):
     if not data.get('pdf'):
         return require_text(data.get('text'), 'Nội dung tài liệu', 1, 1000000)
-    raw = base64.b64decode(data['pdf'], validate=True)
+    try:
+        raw = base64.b64decode(data['pdf'], validate=True)
+    except (binascii.Error, ValueError, TypeError, KeyError):
+        raise ApiError(400, 'Dữ liệu PDF base64 không hợp lệ.')
     if len(raw) > 3*1024*1024 or not raw.startswith(b'%PDF-'):
         raise ApiError(400, 'PDF không hợp lệ hoặc vượt 3 MB.')
     if not shutil.which('pdftotext'):
@@ -537,10 +547,13 @@ class Handler(BaseHTTPRequestHandler):
             reorder=number(data.get('reorder_point',20),'Ngưỡng tồn tối thiểu',0,10000000)
             with database() as c:
                 def work():
-                    if sku and c.execute("SELECT 1 FROM products WHERE pharmacy_id=? AND sku=? COLLATE NOCASE AND id!=?",(ph,sku,data.get('id',0) if editing else 0)).fetchone():
-                        raise ApiError(400,'Mã sản phẩm đã được sử dụng.')
+                    target_id=number(data.get('id'),'Sản phẩm',1) if editing else 0
+                    if sku and c.execute("SELECT 1 FROM products WHERE pharmacy_id=? AND sku=? COLLATE NOCASE AND id!=?",(ph,sku,target_id)).fetchone():
+                        raise ApiError(409,'Mã sản phẩm đã được sử dụng.')
+                    if barcode and c.execute("SELECT 1 FROM products WHERE pharmacy_id=? AND barcode=? COLLATE NOCASE AND id!=?",(ph,barcode,target_id)).fetchone():
+                        raise ApiError(409,'Mã vạch đã được sử dụng cho một sản phẩm khác.')
                     if editing:
-                        pid=number(data.get('id'),'Sản phẩm',1)
+                        pid=target_id
                         changed=c.execute('UPDATE products SET name=?,active=?,strength=?,form=?,unit=?,barcode=?,price=?,reorder_point=?,requires_rx=?,sku=?,dosage=?,side_effects=? WHERE pharmacy_id=? AND id=?',
                             (name,active,strength,form,unit,barcode,price,reorder,int(data.get('requires_rx') is True),sku,dosage,effects,ph,pid))
                         if not changed.rowcount:
@@ -618,14 +631,28 @@ class Handler(BaseHTTPRequestHandler):
             customer_id=data.get('customer_id')
             cid=number(customer_id,'Khách hàng',1) if customer_id not in (None,'') else None
             code=require_text(data.get('prescription_code',''),'Mã đơn điện tử',0,100)
+            request_key=data.get('request_id','')
+            if not isinstance(request_key,str) or (request_key and not re.fullmatch(r'[A-Za-z0-9_-]{12,100}',request_key)):
+                raise ApiError(400,'Mã yêu cầu bán hàng không hợp lệ.')
             consolidated={}
             for item in items:
                 if not isinstance(item,dict):raise ApiError(400,'Sản phẩm trong giỏ hàng không hợp lệ.')
                 pid=number(item.get('product_id'),'Sản phẩm',1)
                 qty=number(item.get('qty'),'Số lượng bán',1,100000)
                 consolidated[pid]=consolidated.get(pid,0)+qty
+            request_hash=hashlib.sha256(json.dumps({
+                'items':sorted(consolidated.items()),'customer_id':cid,
+                'pharmacist_verified':True,'rx_verified':data.get('rx_verified') is True,
+                'prescription_code':code
+            },sort_keys=True,ensure_ascii=False).encode('utf-8')).hexdigest()
             with database() as c:
                 def work():
+                    if request_key:
+                        existing=c.execute('SELECT id,total,request_hash FROM sales WHERE pharmacy_id=? AND request_key=?',(ph,request_key)).fetchone()
+                        if existing:
+                            if existing['request_hash']!=request_hash:
+                                raise ApiError(409,'Mã yêu cầu đã dùng cho đơn khác. Vui lòng tạo yêu cầu mới.')
+                            return existing['id'],existing['total'],True
                     if cid and not c.execute('SELECT 1 FROM customers WHERE id=? AND pharmacy_id=?',(cid,ph)).fetchone():
                         raise ApiError(404,'Không tìm thấy khách hàng.')
                     plans=[];total=0
@@ -642,17 +669,17 @@ class Handler(BaseHTTPRequestHandler):
                             if rem==0:break
                         if rem:raise ApiError(409,f'{p["name"]} chỉ còn {qty-rem} đơn vị đủ điều kiện bán.')
                         total+=qty*p['price']
-                    sid=c.execute('INSERT INTO sales(pharmacy_id,customer_id,total,created_at,verified_by,prescription_code) VALUES(?,?,?,?,?,?)',
-                                  (ph,cid,total,now(),uid,code)).lastrowid
+                    sid=c.execute('INSERT INTO sales(pharmacy_id,customer_id,total,created_at,verified_by,prescription_code,request_key,request_hash) VALUES(?,?,?,?,?,?,?,?)',
+                                  (ph,cid,total,now(),uid,code,request_key,request_hash)).lastrowid
                     for pid,bid,qty,price in plans:
                         c.execute('UPDATE batches SET qty=qty-? WHERE id=?',(qty,bid))
                         c.execute('INSERT INTO sale_lines(sale_id,product_id,batch_id,qty,unit_price) VALUES(?,?,?,?,?)',(sid,pid,bid,qty,price))
                         c.execute('INSERT INTO stock_moves(pharmacy_id,batch_id,change_qty,kind,reason,actor_id,created_at) VALUES(?,?,?,?,?,?,?)',
                                   (ph,bid,-qty,'sale',f'Đơn bán #{sid}',uid,now()))
                     audit(c,ph,uid,'sale.create',{'sale_id':sid,'total':total,'items':consolidated})
-                    return sid,total
-                sid,total=self.transaction(c,work)
-            return {'ok':True,'id':sid,'total':total},None
+                    return sid,total,False
+                sid,total,replayed=self.transaction(c,work)
+            return {'ok':True,'id':sid,'total':total,'replayed':replayed},None
         if path=='/api/customers':
             name=require_text(data.get('name'),'Tên khách hàng',2,100)
             phone=require_text(data.get('phone',''),'Số điện thoại',0,30)
